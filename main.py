@@ -1,9 +1,50 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import urllib.parse
+from datetime import date
 
-# Configurações da página
+#defini classes, 
+
+class Pedido:
+    def __init__(self, tipo, recheio, massa, data_entrega, quantidade):
+        self.tipo = tipo
+        self.recheio = recheio
+        self.massa = massa
+        self.data_entrega = data_entrega
+        self.quantidade = quantidade
+
+    def gerar_mensagem(self):
+        return (
+            f"Novo pedido:\n"
+            f"Tipo: {self.tipo}\n"
+            f"Recheio: {self.recheio}\n"
+            f"Massa: {self.massa if self.massa else 'Nenhuma'}\n"
+            f"Data: {self.data_entrega}\n"
+            f"Quantidade: {self.quantidade}"
+        )
+
+    def gerar_link_whatsapp(self, telefone):
+        mensagem = self.gerar_mensagem()
+        mensagem_codificada = urllib.parse.quote(mensagem)
+        return f"https://wa.me/{telefone}?text={mensagem_codificada}"
+
+
+class Cardapio:
+    def __init__(self):
+        self.opcoes = ["Pastel", "Coxinha", "Esfiha"]
+        self.recheios = {
+            "Pastel": ["Carne", "Banana e Queijo", "Frango com Catupiry"],
+            "Coxinha": ["Frango", "Carne"],
+            "Esfiha": ["Carne", "Mista", "Calabresa"]
+        }
+        self.massas = ["Macaxeira", "Trigo"]
+
+    def get_recheios(self, tipo):
+        return self.recheios.get(tipo, [])
+
+
+# CONFIGURAÇÃO DA PÁGINA
+
 st.set_page_config(
     page_title="Salgados do Eduardo",
     page_icon="🚩",
@@ -11,59 +52,38 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Título principal
-st.write("""
-         # Faça seu pedido para Eduardo
-          Faça seu pedido abaixo:""")   
+st.title("Faça seu pedido para Eduardo")
 
-# Viariaveis para definir os tipos de salgados, recheios e massas
+cardapio = Cardapio()
 
-opcoes = ["Pastel", "Coxinha", "Esfiha"]
-recheio_pastel = ["Carne", "Banana e Queijo", "Frango com Catupiry"]
-massa = ["Macaxeira", "Trigo"]
-recheio_coxinha = ["Frango", "Carne"]
-recheio_esfiha = ["Carne", "Mista", "Calabresa"]
+# ESCOLHAS DO USUÁRIO
 
-# Campo para escolher a data de entrega, tipo de salgado e recheio
+data_entrega = st.date_input("Escolha a data de entrega:", min_value=date.today())
+tipo = st.selectbox("Escolha o salgado:", cardapio.opcoes)
 
-data_entrega = st.date_input("Escolha a data de entrega:")
-fazer_pedido = st.selectbox("Escolha o salgado: ", opcoes)
-recheio_escolhido = recheio_pastel if fazer_pedido == "Pastel" else (recheio_coxinha if fazer_pedido == "Coxinha" else recheio_esfiha)  
-quantidade_pedido = st.number_input("Quantidade:", min_value=1, max_value=100, value=1) 
+recheio = st.selectbox("Escolha o recheio:", cardapio.get_recheios(tipo))
 
-# Exibir opções de recheio com base no tipo de salgado escolhido
+massa = None
+if tipo == "Coxinha":
+    massa = st.selectbox("Escolha a massa:", cardapio.massas)
 
-if fazer_pedido == "Pastel":
-    st.selectbox("Escolha o recheio do pastel:", recheio_pastel) 
-elif fazer_pedido == "Coxinha":
-    st.selectbox("Escolha a massa:", massa)
-    st.selectbox("Escolha o recheio da coxinha:", recheio_coxinha)
-elif fazer_pedido == "Esfiha":    
-    st.selectbox("Escolha o recheio da esfiha:", recheio_esfiha)
+quantidade = st.number_input("Quantidade:", min_value=1, max_value=100, value=1)
 
+# =========================
+# BOTÃO DE PEDIDO
+# =========================
 
-# Variável para armazenar o pedido selecionado
-pedido =  fazer_pedido
-
-
-# Botão para fazer o pedido e gerar o link do WhatsApp
 if st.button("Fazer pedido"):
+    pedido = Pedido(tipo, recheio, massa, data_entrega, quantidade)
     telefone = "5592984374299"
 
-    mensagem = f" Novo pedido: {pedido}\n Recheio: {recheio_escolhido[0]}\n Massa: {massa[0]}\n Data de entrega: {data_entrega}\n Quantidade: {quantidade_pedido}"            
-            
-    mensagem_codificada = urllib.parse.quote(mensagem)
+    link = pedido.gerar_link_whatsapp(telefone)
 
-    link = f"https://wa.me/{telefone}?text={mensagem_codificada}"
+    st.success("Pedido pronto! Clique abaixo para enviar no WhatsApp:")
+    st.markdown(f"[ Enviar pedido]({link})")
 
-    st.success("Pedido pronto! Clique abaixo para enviar via WhatsApp ")
-    st.markdown(f"[Enviar pedido]({link})", unsafe_allow_html=True)
+# =========================
+# RODAPÉ
+# =========================
 
-
-
-st.write(""" 
-         
-         # Valor: R$ 5,00 cada
-            """)
-
-
+st.markdown("## Valor: R$ 5,00 cada")
