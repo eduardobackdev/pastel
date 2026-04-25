@@ -69,9 +69,7 @@ if tipo == "Coxinha":
 
 quantidade = st.number_input("Quantidade:", min_value=1, max_value=100, value=1)
 
-# =========================
 # BOTÃO DE PEDIDO
-# =========================
 
 if st.button("Fazer pedido"):
     pedido = Pedido(tipo, recheio, massa, data_entrega, quantidade)
@@ -82,8 +80,6 @@ if st.button("Fazer pedido"):
     st.success("Pedido pronto! Clique abaixo para enviar no WhatsApp:")
     st.markdown(f"[ Enviar pedido]({link})")
 
-# =========================
-# RODAPÉ
-# =========================
 
+# RODAPÉ
 st.markdown("## Valor: R$ 5,00 cada")
